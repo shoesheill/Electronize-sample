@@ -35,5 +35,6 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapDefaultControllerRoute();
 app.UseCoreAdminCustomTitle("Admin Dashboard");
-Task.Run(async () => await Electron.WindowManager.CreateWindowAsync());
+if (HybridSupport.IsElectronActive)
+    Task.Run(async () => await Electron.WindowManager.CreateWindowAsync());
 app.Run();

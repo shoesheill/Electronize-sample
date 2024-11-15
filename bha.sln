@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication5", "WebApplication5\WebApplication5.csproj", "{C14C8205-C518-4FC8-9448-765C205C2AF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PosPrinterApp", "PosPrinterApp\PosPrinterApp.csproj", "{F2F6C193-60A0-48E5-9078-4F018E9A3979}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{C14C8205-C518-4FC8-9448-765C205C2AF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C14C8205-C518-4FC8-9448-765C205C2AF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C14C8205-C518-4FC8-9448-765C205C2AF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2F6C193-60A0-48E5-9078-4F018E9A3979}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2F6C193-60A0-48E5-9078-4F018E9A3979}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2F6C193-60A0-48E5-9078-4F018E9A3979}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2F6C193-60A0-48E5-9078-4F018E9A3979}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
