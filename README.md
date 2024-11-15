@@ -1,83 +1,30 @@
+Sure! Below is a new markdown that focuses only on integrating **CoreAdmin** into the existing ASP.NET Core MVC application, while keeping the other Electron-related parts as they are:
 
 ```markdown
-# Packaging an ASP.NET Core MVC Application as a Desktop Executable with Electron.NET
+# Packaging an ASP.NET Core MVC Application as a Desktop Executable with Electron.NET and CoreAdmin
 
-This guide demonstrates how to package an ASP.NET Core MVC application as a standalone desktop executable using Electron.NET.
+This guide demonstrates how to package an ASP.NET Core MVC application as a standalone desktop executable using **Electron.NET** and integrate **CoreAdmin** to manage the admin dashboard.
 
 ## Prerequisites
 
 - .NET SDK (5.0 or later)
 - Node.js and npm installed
 - Electron.NET CLI
+- CoreAdmin NuGet package
 
-## 1. Set Up Electron.NET in Your MVC Project
+## 1. Set Up CoreAdmin in Your MVC Project
 
-### Install Electron.NET CLI
-Open a terminal and install the Electron.NET CLI globally:
+### Install CoreAdmin NuGet Package
 
-```bash
-dotnet tool install ElectronNET.CLI -g
-dotnet new tool-manifest
-```
-
-### Add Electron.NET to Your Project
-In your MVC project, add the Electron.NET API package by running:
+To use CoreAdmin, first, add the **CoreAdmin** NuGet package:
 
 ```bash
-dotnet add package ElectronNET.API
+dotnet add package CoreAdmin
 ```
 
-### Initialize Electron.NET
-Open `Program.cs` and configure Electron.NET by adding setup:
+### Configure CoreAdmin in `Program.cs`
 
-```csharp
-builder.WebHost.UseElectron(args);
-```
-
-### Enable Electron Startup
-In the `Program.cs` before `app.Run()` add method to open a new Electron window:
-
-```csharp
-if (HybridSupport.IsElectronActive)
-    Task.Run(async () => await Electron.WindowManager.CreateWindowAsync());
-```
-
-## 2. Build the Electron App
-
-### Initialize Electron
-Run the following command to initialize Electron for your app:
-
-```bash
-dotnet electronize init
-```
-
-### Start the App in Electron
-To start the app in Electron during development, use:
-
-```bash
-dotnet electronize start
-```
-
-## 3. Package as an Executable
-
-Once everything works in development, package the application as an executable:
-
-```bash
-dotnet electronize build /target win
-```
-
-Replace `/target win` with `/target mac` or `/target linux` depending on your platform. This command will create a packaged executable in the `bin/desktop` folder.
-
-## Notes
-
-- **Frontend UI**: While you can use MVC Views in the Electron app, consider using a frontend framework like Blazor, React, or Angular for a more interactive experience.
-- **Resource Usage**: Electron applications can be resource-intensive, so optimizing your application is recommended.
-- **System Permissions**: Ensure you handle file access, printing, and system interactions carefully if needed.
-
-## 4. Automatic Database Initialization and Migration
-
-### Program.cs Setup
-Modify the `Program.cs` or wherever your app initializes dependencies to automatically create the database and apply migrations when the app starts.
+In your `Program.cs`, after configuring your services for **Razor Pages** and **Electron.NET**, you can set up **CoreAdmin**:
 
 ```csharp
 using ElectronNET.API;
@@ -86,11 +33,11 @@ using WebApplication5.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseElectron(args);
+
 // Add services to the container.
 builder.Services.AddRazorPages();
-//builder.Services.AddDbContext<AppDbContext>(options=>options.UseInMemoryDatabase("InMemoryDatabase"));
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=app.db"));
-builder.Services.AddCoreAdmin();
+builder.Services.AddCoreAdmin(); // Add CoreAdmin services
 
 var app = builder.Build();
 
@@ -98,7 +45,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -106,35 +52,93 @@ var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 var pendingMigrations = dbContext.Database.GetPendingMigrations();
 if (pendingMigrations.Any()) dbContext.Database.Migrate();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthorization();
 
+// Map Razor Pages and Controllers
 app.MapRazorPages();
 app.MapControllers();
 app.MapDefaultControllerRoute();
+
+// Set Custom CoreAdmin Title
 app.UseCoreAdminCustomTitle("Admin Dashboard");
+
 if (HybridSupport.IsElectronActive)
     Task.Run(async () => await Electron.WindowManager.CreateWindowAsync());
+
 app.Run();
 ```
 
-This code ensures that `Database.Migrate()` is called every time the app starts, which will create the database and apply any pending migrations.
+### Customizing CoreAdmin Settings
 
-## 5. Include Migration Files in the Published App
+You can customize CoreAdmin with different settings. For instance, you can set the **home page URL** or change the **theme** of the dashboard:
 
-Make sure your migration files are included when you publish the app. Run the following commands to create and apply migrations locally:
-
-```bash
-dotnet ef migrations add InitialCreate
-dotnet ef database update
+```csharp
+builder.Services.AddCoreAdmin(config =>
+{
+    config.UseCoreAdminCustomConfig = options =>
+    {
+        options.HomePageUrl = "/admin/dashboard";  // Custom dashboard URL
+        options.Theme = CoreAdmin.Theme.Dark;      // Dark mode theme
+        options.Layout = CoreAdmin.Layout.Vertical; // Vertical layout for navigation
+    };
+});
 ```
 
-### Include Migrations in Build Output
-Ensure that the migration files are included in your project’s build output by adding the following to your `.csproj`:
+### Automatically Apply Database Migrations
+
+CoreAdmin often requires a database to work with. In this setup, your **AppDbContext** will use an **SQLite** database. Make sure that migrations are applied automatically on startup:
+
+```csharp
+var scope = app.Services.CreateScope();
+var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+var pendingMigrations = dbContext.Database.GetPendingMigrations();
+if (pendingMigrations.Any()) dbContext.Database.Migrate();
+```
+
+### Run Electron Window
+
+If **Electron.NET** is active, it will automatically create an Electron window to display the application:
+
+```csharp
+if (HybridSupport.IsElectronActive)
+    Task.Run(async () => await Electron.WindowManager.CreateWindowAsync());
+```
+
+## 2. Building and Packaging the Electron App
+
+### Initialize Electron
+
+To initialize Electron for your app:
+
+```bash
+dotnet electronize init
+```
+
+### Start the App in Electron
+
+Run the app in **Electron** during development:
+
+```bash
+dotnet electronize start
+```
+
+### Package the App as an Executable
+
+Once the app works as expected, package it as an executable:
+
+```bash
+dotnet electronize build /target win
+```
+
+This will package the app for Windows. Change `/target` to `mac` or `linux` as needed for other platforms.
+
+## 3. Ensure Migrations Are Included in Build Output
+
+Ensure that migration files are copied to the output directory when building the app. Update your `.csproj` to include the migration files:
 
 ```xml
 <ItemGroup>
@@ -144,19 +148,21 @@ Ensure that the migration files are included in your project’s build output by
 </ItemGroup>
 ```
 
-## 6. Electronize and Build the App
-
-When you package the app with `electronize build`, it will include everything needed to initialize the database on the first run.
-
-```bash
-dotnet electronize build /target win
-```
-
-This ensures that your app is ready to be installed and initialized across different platforms.
-
 ## Summary
 
-With this setup, the app will automatically create the database and apply migrations whenever it starts, ensuring users don’t need to run any database setup manually. This approach makes it straightforward to install and initialize the app across different platforms.
+With this setup, your ASP.NET Core MVC application will be packaged as an Electron desktop executable, and CoreAdmin will provide a powerful admin dashboard. Additionally, any pending database migrations will be applied automatically when the app starts, making it easier to manage data initialization without manual intervention.
 ```
 
-This README provides a structured guide for setting up an ASP.NET Core MVC application with Electron.NET, handling automatic database migration, and packaging the app as a desktop executable.
+---
+
+### Key Points in the New Section:
+
+1. **CoreAdmin Integration**: We added the necessary configuration to use CoreAdmin within the application by registering it in the `Program.cs` and customizing its settings.
+
+2. **Database Migrations**: Code for automatic database migration ensures that when the app starts, it creates or updates the database schema as needed.
+
+3. **Electron Window**: The setup includes an Electron window that will show the CoreAdmin dashboard, and this is automatically initialized when running the app in an Electron environment.
+
+4. **Packaging**: The instructions remain the same for building and packaging the app with Electron.NET, and the database migrations are included in the packaging process.
+
+This structure provides clear integration between **CoreAdmin**, **Electron**, and **ASP.NET Core MVC** while maintaining the steps for database initialization and packaging.
